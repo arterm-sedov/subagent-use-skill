@@ -1,0 +1,17 @@
+# Subagent Use Skill
+*.pyc
+__pycache__/
+.env
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Subagent workflow artifacts
+.research/
+.plans/
+*.log
+*.tmp.agent-chats/

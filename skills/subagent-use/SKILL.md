@@ -1,8 +1,8 @@
 # Subagent Use Skill (Agent-Native)
 
 **Name:** subagent-use  
-**Version:** 2.0.0  
-**Description:** Agent-native patterns for managing subagent workflows with progress tracking, plans, and deep research. No shell scripts — use directly via Task tool and file operations.
+**Version:** 2.1.0  
+**Description:** Agent-native patterns for managing subagent workflows with progress tracking, plans, and deep research. Primary artifacts are Markdown; subagents may write additional data files in any format.
 
 ---
 
@@ -27,6 +27,24 @@
 | Validate every step | Run validator after each change |
 | No silent failures | Errors = immediate escalation to Main |
 | Progress file updated | After EVERY step (mark `[x]` immediately) |
+| **All artifacts are Markdown** | Plans, progress, research → `.md` files only |
+
+---
+
+## Output Format Requirements
+
+**Primary artifacts MUST be Markdown (`.md`):**
+
+| Artifact | Extension | Template |
+|----------|-----------|----------|
+| Plan | `.md` | `references/templates/plan-template.md` |
+| Progress | `.md` | `references/templates/progress.md` |
+| Research | `.md` | `references/templates/research-output.md` |
+| Validation report | `.md` | (ad-hoc, but `.md` required) |
+
+**Templates use markdown checkboxes (`- [ ]`, `- [x]`), tables, and headings — subagents must preserve this structure.**
+
+**Additional files** (data dumps, raw API responses, configs, etc.) may use any format (`.json`, `.yaml`, `.txt`, `.csv`) as needed — save alongside primary artifacts in the same directories.
 
 ---
 
@@ -221,6 +239,8 @@ CRITICAL PROTOCOL:
 4. On blocker: Update progress Status=BLOCKED, describe blocker, STOP
 5. On complete: Update progress Status=DONE, summary in Completed
 
+**Primary artifacts (plan, progress) must be .md.** Additional data files may use any format.
+
 Progress file: .plans/progress/{progress_file}
 """
 )
@@ -246,7 +266,8 @@ Validation commands:
 - python3 validate.py --json file.json --md file.md --cyclonedx
 - [other checks]
 
-Save results to: .plans/progress/validation-{topic}.md
+Save results to: .plans/progress/validation-{topic}.md (Markdown report)
+Additional data (JSON logs, raw output) may use any format alongside.
 Report: PASS/FAIL with details
 """
 )

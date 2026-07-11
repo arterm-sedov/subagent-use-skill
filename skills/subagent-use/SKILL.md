@@ -287,86 +287,15 @@ Include:
 
 ---
 
-## Template Structures (Reference)
+## Templates (Reference Files)
 
-### Plan Template (`references/templates/plan-template.md`)
-```markdown
-# Plan: [Title]
+| Template | Path | Use When |
+|----------|------|----------|
+| Plan | `references/templates/plan-template.md` | Creating a plan file |
+| Progress | `references/templates/progress.md` | Tracking execution status |
+| Research | `references/templates/research-output.md` | Documenting research findings |
 
-## Goal
-[Measurable objective]
-
-## Prerequisites
-- [ ] Pre-req 1
-- [ ] Pre-req 2
-
-## Phases
-
-### Phase 1: [Name]
-- [ ] Step 1
-- [ ] Step 2
-
-### Phase 2: [Name]
-- [ ] Step 1
-- [ ] Step 2
-
-## Affected Files
-| File | Change |
-|------|--------|
-
-## Verification
-- [ ] Test 1
-- [ ] Test 2
-
-## Dependencies
-- Depends on: ...
-- Blocks: ...
-```
-
-### Progress Template (`references/templates/progress.md`)
-```markdown
-# Progress: [Task Name]
-
-## Status: IN_PROGRESS / DONE / BLOCKED
-
-## Completed
-- [x] Step 1
-- [x] Step 2
-
-## Current
-- [ ] Step 3: ...
-
-## Blockers
-- None / [Description]
-
-## Next
-- Step 4: ...
-```
-
-### Research Output Template (`references/templates/research-output.md`)
-```markdown
-# Research: [Topic]
-
-## Questions
-1. Q1
-2. Q2
-
-## Sources
-| Source | Key Finding | Relevance |
-|--------|-------------|-----------|
-| URL/Ref | Key point | High/Med/Low |
-
-## Findings
-
-### Finding 1
-**Evidence:** ...
-**Source:** URL
-
-## Recommendation
-- Action: [Specific action]
-- Rationale: [Why]
-- Confidence: High/Med/Low
-```
+Templates are standalone reference files. Read them directly via `Read` tool when creating corresponding files.
 
 ---
 

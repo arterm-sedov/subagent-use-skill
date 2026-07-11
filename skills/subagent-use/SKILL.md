@@ -42,7 +42,10 @@
 │   └── topic-research.md        # Research outputs
 └── .agents/skills/subagent-use/
     ├── SKILL.md                 # This file
-    └── templates/               # Reference structures (see below)
+    └── references/
+        ├── templates/           # Plan, progress, research templates
+        ├── examples/            # Example files
+        └── schemas/             # Validation schemas
 ```
 
 **Agent creates directories on first use:** `mkdir -p .plans .plans/progress .research`
@@ -65,7 +68,7 @@ nn = f"{len(existing) + 1:02d}"
 plan_name = f"{nn}-{slugify(short_description)}"
 plan_path = f".plans/{plan_name}.md"
 
-# 3. Write plan with structure from templates/plan-template.md
+# 3. Write plan with structure from references/templates/plan-template.md
 write(plan_path, f"""# Plan: {plan_name}
 
 ## Goal
@@ -99,7 +102,7 @@ write(plan_path, f"""# Plan: {plan_name}
 """)
 ```
 
-**Template reference:** `templates/plan-template.md` — use this exact structure.
+**Template reference:** `references/templates/plan-template.md` — use this exact structure.
 
 ---
 
@@ -137,7 +140,7 @@ write(progress_path, f"""# Progress: {task_name}
 """)
 ```
 
-**Template reference:** `templates/progress.md` — use this exact structure.
+**Template reference:** `references/templates/progress.md` — use this exact structure.
 
 **Update protocol (Subagent does after EACH step):**
 ```python
@@ -178,12 +181,12 @@ Sources to check:
 Output format: Structured markdown with citations
 Save to: .research/{slugify(topic)}-research.md
 
-Use template structure from templates/research-output.md
+Use template structure from references/templates/research-output.md
 """
 )
 ```
 
-**Output structure (subagent writes to `.research/`):** See `templates/research-output.md`
+**Output structure (subagent writes to `.research/`):** See `references/templates/research-output.md`
 
 ---
 
@@ -270,7 +273,7 @@ Constraints: [list]
 Context: [relevant files, existing patterns]
 
 Output: .plans/NN-name.md with full checklist
-Use template structure from templates/plan-template.md
+Use template structure from references/templates/plan-template.md
 
 Include:
 - Prerequisites
@@ -286,7 +289,7 @@ Include:
 
 ## Template Structures (Reference)
 
-### Plan Template (`templates/plan-template.md`)
+### Plan Template (`references/templates/plan-template.md`)
 ```markdown
 # Plan: [Title]
 
@@ -320,7 +323,7 @@ Include:
 - Blocks: ...
 ```
 
-### Progress Template (`templates/progress.md`)
+### Progress Template (`references/templates/progress.md`)
 ```markdown
 # Progress: [Task Name]
 
@@ -340,7 +343,7 @@ Include:
 - Step 4: ...
 ```
 
-### Research Output Template (`templates/research-output.md`)
+### Research Output Template (`references/templates/research-output.md`)
 ```markdown
 # Research: [Topic]
 

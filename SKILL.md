@@ -1,104 +1,420 @@
-# Subagent Use Skill
+# Subagent Use Skill (Agent-Native)
 
 **Name:** subagent-use  
-**Version:** 1.0.0  
-**Description:** Reusable skill for managing subagent workflows with progress tracking, plans, and deep research
+**Version:** 2.0.0  
+**Description:** Agent-native patterns for managing subagent workflows with progress tracking, plans, and deep research. No shell scripts — use directly via Task tool and file operations.
+
+---
 
 ## When to Use
+
 - Any task requiring subagent delegation
 - Research tasks requiring deep investigation
 - Multi-step migrations/validations
 - File reorganization tasks
-
-## Patterns
-
-### Pattern 1: Research Subagent
-**When:** Need external facts, standards comparison, best practices
-**Prompt:** `Research [topic] with questions: Q1, Q2. Sources: [list]. Output to .research/[topic].md`
-**Output:** Structured markdown with citations, saved to `.research/[topic]-research.md`
-
-### Pattern 2: Execution Subagent
-**When:** Multi-step plan execution
-**Prompt:** `Execute steps 1-5 from .plans/04-plan.md. Save progress to .plans/progress/04-migration.md after each step.`
-**Progress:** Subagent writes to `.plans/progress/XX-name.md` after each step
-
-### Pattern 2: Validation Subagent
-**When:** Need to verify outputs
-**Prompt:** `Validate all examples with --cyclonedx flag. Save results to .plans/progress/validation.md`
-**Output:** Validation results saved to progress file
-
-### Pattern 4: Planning Subagent
-**When:** Need detailed plan from high-level goal
-**Prompt:** `Create detailed plan for [goal]. Output to .plans/NN-name.md with checklist.`
-**Output:** Detailed plan file with checklist
+- Any task > 30 minutes
 
 ---
 
-## Rules (Enforced)
+## Core Rules (Enforced)
 
-1. **Main never writes code** when subagent can do it
-2. **Subagent never commits** - only Main commits
-3. **Progress file mandatory** for tasks > 30 min
-4. **Atomic tasks** - one logical change = one subagent
-5. **Validate every step** - validator runs after each change
-6. **No silent failures** - errors = immediate escalation
-5. **Progress file** updated after EVERY step
+| Rule | Enforcement |
+|------|-------------|
+| Main never writes code | Delegate to subagent via Task tool |
+| Subagent never commits | Main commits only |
+| Progress file mandatory | Tasks > 30 min → create `.plans/progress/XX-name.md` |
+| Atomic tasks | One logical change = one subagent |
+| Validate every step | Run validator after each change |
+| No silent failures | Errors = immediate escalation to Main |
+| Progress file updated | After EVERY step (mark `[x]` immediately) |
 
 ---
 
-## Quick Reference
-
-```bash
-# Create plan
-./scripts/create-plan.sh feature-x "Add feature X"
-
-# Track progress
-./scripts/create-progress.sh feature-x
-
-# Research
-./scripts/launch-subagent.sh research "CycloneDX naming" "Is YAML valid?"
-
-# Execute plan
-./scripts/launch-subagent.sh execute .plans/01-feature-x.md
-
-# Validate
-./scripts/launch-subagent.sh validate --json file.json --md file.md --cyclonedx
-
-# Check progress
-cat .plans/progress/01-feature-x.md
-```
-
-## Directory Structure
+## Directory Structure (Auto-Created)
 
 ```
 .repo/
 ├── .plans/
-│   ├── NN-plan-name.md
+│   ├── NN-plan-name.md          # Plan files (auto-numbered)
 │   └── progress/
-│       └── NN-plan-name.md
+│       └── NN-plan-name.md      # Progress files (match plan number)
 ├── .research/
-│   └── topic-research.md
-├── .agents/skills/subagent-use/
-│   ├── SKILL.md
-│   ├── templates/
-│   │   ├── plan-template.md
-│   │   ├── progress.md
-│   │   ├── research-output.md
-│   │   └── subagent-prompt.md
-│   └── scripts/
-│       ├── create-plan.sh
-│       ├── create-progress.sh
-│       └── launch-subagent.sh
-└── README.md
+│   └── topic-research.md        # Research outputs
+└── .agents/skills/subagent-use/
+    ├── SKILL.md                 # This file
+    └── templates/               # Reference structures (see below)
 ```
 
-## Key Rules
+**Agent creates directories on first use:** `mkdir -p .plans .plans/progress .research`
 
-| Rule | Enforcement |
-|------|-------------|
-| Main never writes code | Delegate to subagent |
-| Subagent never commits | Main commits only |
-| Progress file required | Tasks > 30 min |
-| Atomic commits | One logical change = one commit |
-| Validate every step | Validator runs after each change |
-| English in code/commits | Team readability |
+---
+
+## Agent Workflows
+
+### 1. Create a Plan
+
+**When:** Starting any multi-step task  
+**How (Agent does this directly):**
+
+```python
+# 1. Determine next plan number
+existing = glob(".plans/*.md")
+nn = f"{len(existing) + 1:02d}"
+
+# 2. Create plan file using template structure
+plan_name = f"{nn}-{slugify(short_description)}"
+plan_path = f".plans/{plan_name}.md"
+
+# 3. Write plan with structure from templates/plan-template.md
+write(plan_path, f"""# Plan: {plan_name}
+
+## Goal
+[Measurable objective - what "done" looks like]
+
+## Prerequisites
+- [ ] Pre-req 1
+- [ ] Pre-req 2
+
+## Phases
+
+### Phase 1: [Name]
+- [ ] Step 1
+- [ ] Step 2
+
+### Phase 2: [Name]
+- [ ] Step 1
+- [ ] Step 2
+
+## Affected Files
+| File | Change |
+|------|--------|
+
+## Verification
+- [ ] Test 1
+- [ ] Test 2
+
+## Dependencies
+- Depends on: ...
+- Blocks: ...
+""")
+```
+
+**Template reference:** `templates/plan-template.md` — use this exact structure.
+
+---
+
+### 2. Create Progress File
+
+**When:** Subagent starts executing a plan (or Main delegates execution)  
+**How (Agent does this directly):**
+
+```python
+# 1. Extract plan number from plan file
+#    e.g., ".plans/04-migration.md" → "04"
+plan_num = basename(plan_path).split("-")[0]
+
+# 2. Create progress file matching plan number
+progress_name = f"{plan_num}-{slugify(task_name)}"
+progress_path = f".plans/progress/{progress_name}"
+
+# 3. Write progress using template structure
+write(progress_path, f"""# Progress: {task_name}
+
+## Status: IN_PROGRESS
+
+## Completed
+- [ ] Step 1
+- [ ] Step 2
+
+## Current
+- [ ] Step 1: 
+
+## Blockers
+- None
+
+## Next
+- Step 1: 
+""")
+```
+
+**Template reference:** `templates/progress.md` — use this exact structure.
+
+**Update protocol (Subagent does after EACH step):**
+```python
+# After completing a step:
+edit(progress_path, old="  - [ ] Step 1", new="  - [x] Step 1")
+edit(progress_path, old="## Current\n- [ ] Step 1: ", new="## Current\n- [ ] Step 2: ...")
+# Also update Status if DONE/BLOCKED
+```
+
+---
+
+### 3. Launch Research Subagent
+
+**When:** Need external facts, standards comparison, best practices  
+**How (Main agent calls Task tool):**
+
+```python
+# Use whichever subagent type in your environment has:
+# - Web search / fetching capability
+# - File system read/write access
+# - Ability to produce structured markdown output
+# (e.g., "explore", "general", "researcher", "web-research", etc.)
+
+Task(
+    subagent_type="<your-research-capable-subagent>",
+    description=f"Research: {topic}",
+    prompt=f"""Research {topic}
+
+Questions:
+1. {question_1}
+2. {question_2}
+
+Sources to check:
+- Official documentation: [URLs]
+- GitHub: [repos]
+- Standards bodies: [specs]
+
+Output format: Structured markdown with citations
+Save to: .research/{slugify(topic)}-research.md
+
+Use template structure from templates/research-output.md
+"""
+)
+```
+
+**Output structure (subagent writes to `.research/`):** See `templates/research-output.md`
+
+---
+
+### 4. Launch Execution Subagent
+
+**When:** Multi-step plan execution  
+**How (Main agent calls Task tool):**
+
+```python
+# Use whichever subagent type in your environment can:
+# - Read/write files
+# - Run commands (validation)
+# - Execute multi-step plans
+# (e.g., "general", "builder", "coder", "exec", etc.)
+
+Task(
+    subagent_type="<your-execution-capable-subagent>",
+    description=f"Execute: {phase_name}",
+    prompt=f"""Execute {phase_name} of plan at .plans/{plan_file}
+
+Plan phases to execute: {phase_numbers}
+Files to modify: [list from plan]
+Validation command: python3 validate.py --flag (or similar)
+
+CRITICAL PROTOCOL:
+1. Read plan: .plans/{plan_file}
+2. Read progress: .plans/progress/{progress_file}
+3. For EACH step:
+   a. Do the step
+   b. Update progress file: mark [x] Completed, update Current, Next
+   c. Run validation
+4. On blocker: Update progress Status=BLOCKED, describe blocker, STOP
+5. On complete: Update progress Status=DONE, summary in Completed
+
+Progress file: .plans/progress/{progress_file}
+"""
+)
+```
+
+---
+
+### 5. Launch Validation Subagent
+
+**When:** Need to verify outputs  
+**How (Main agent calls Task tool):**
+
+```python
+# Use subagent type that can run validation commands and read files
+# (e.g., "general", "validator", "tester", etc.)
+
+Task(
+    subagent_type="<your-validation-capable-subagent>",
+    description="Validate outputs",
+    prompt=f"""Validate {what_to_validate}
+
+Validation commands:
+- python3 validate.py --json file.json --md file.md --cyclonedx
+- [other checks]
+
+Save results to: .plans/progress/validation-{topic}.md
+Report: PASS/FAIL with details
+"""
+)
+```
+
+---
+
+### 6. Launch Planning Subagent
+
+**When:** Need detailed plan from high-level goal  
+**How (Main agent calls Task tool):**
+
+```python
+# Use subagent type good at analysis and task decomposition
+# (e.g., "explore", "planner", "architect", "general", etc.)
+
+Task(
+    subagent_type="<your-planning-capable-subagent>",
+    description=f"Plan: {goal}",
+    prompt=f"""Create detailed plan for: {goal}
+
+Goal: [measurable objective]
+Constraints: [list]
+Context: [relevant files, existing patterns]
+
+Output: .plans/NN-name.md with full checklist
+Use template structure from templates/plan-template.md
+
+Include:
+- Prerequisites
+- Phases with atomic steps
+- Affected files table
+- Verification steps
+- Dependencies
+"""
+)
+```
+
+---
+
+## Template Structures (Reference)
+
+### Plan Template (`templates/plan-template.md`)
+```markdown
+# Plan: [Title]
+
+## Goal
+[Measurable objective]
+
+## Prerequisites
+- [ ] Pre-req 1
+- [ ] Pre-req 2
+
+## Phases
+
+### Phase 1: [Name]
+- [ ] Step 1
+- [ ] Step 2
+
+### Phase 2: [Name]
+- [ ] Step 1
+- [ ] Step 2
+
+## Affected Files
+| File | Change |
+|------|--------|
+
+## Verification
+- [ ] Test 1
+- [ ] Test 2
+
+## Dependencies
+- Depends on: ...
+- Blocks: ...
+```
+
+### Progress Template (`templates/progress.md`)
+```markdown
+# Progress: [Task Name]
+
+## Status: IN_PROGRESS / DONE / BLOCKED
+
+## Completed
+- [x] Step 1
+- [x] Step 2
+
+## Current
+- [ ] Step 3: ...
+
+## Blockers
+- None / [Description]
+
+## Next
+- Step 4: ...
+```
+
+### Research Output Template (`templates/research-output.md`)
+```markdown
+# Research: [Topic]
+
+## Questions
+1. Q1
+2. Q2
+
+## Sources
+| Source | Key Finding | Relevance |
+|--------|-------------|-----------|
+| URL/Ref | Key point | High/Med/Low |
+
+## Findings
+
+### Finding 1
+**Evidence:** ...
+**Source:** URL
+
+## Recommendation
+- Action: [Specific action]
+- Rationale: [Why]
+- Confidence: High/Med/Low
+```
+
+---
+
+## Anti-Patterns (Don't)
+
+| Anti-pattern | Why Bad | Fix |
+|--------------|---------|-----|
+| Main writes code | Loses audit trail | Delegate to subagent |
+| Subagent commits | No review | Main commits only |
+| No progress file | Lost context | Write `.plans/progress/` |
+| "Do everything" task | Context overflow, errors | Atomic tasks only |
+| No validation step | Bugs in commit | Validate every step |
+| Silent failures | Hidden breakage | Escalate blockers immediately |
+| Progress not updated | Main blind | Update after EACH step |
+
+---
+
+## Quick Reference (Agent Mental Model)
+
+```
+MAIN AGENT                    SUBAGENT
+─────────────────             ─────────────────
+Creates plan                  Reads plan
+Creates progress file         Updates progress after EACH step
+Calls Task tool               Executes steps
+Reviews progress              Runs validation
+Commits (only Main)           Reports blockers immediately
+                              Never commits
+```
+
+**Subagent selection by capability (not name):**
+
+| Need | Use subagent that can... |
+|------|--------------------------|
+| Research | Web search, fetch docs, write `.research/` |
+| Execution | Read/write files, run commands, multi-step |
+| Validation | Run test/lint commands, report PASS/FAIL |
+| Planning | Analyze codebase, decompose tasks, write plans |
+
+---
+
+## File Naming Conventions
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Plan | `NN-kebab-case.md` | `04-add-cyclonedx-support.md` |
+| Progress | `NN-kebab-case.md` (matches plan NN) | `04-add-cyclonedx-support.md` |
+| Research | `topic-research.md` | `cyclonedx-naming-research.md` |
+
+**Auto-numbering:** `NN = 2-digit sequential` (01, 02, 03...)
+
+---
+
+*Version 2.0: Agent-native rewrite. Shell scripts removed — logic embedded as agent instructions.*

@@ -2,7 +2,7 @@
 
 **Name:** subagent-use  
 **Version:** 2.1.0  
-**Description:** Agent-native patterns for managing subagent workflows with progress tracking, plans, and deep research. Primary artifacts are Markdown; subagents may write additional data files in any format.
+**Description:** Agent-native patterns for managing subagent workflows with progress tracking, plans, and deep research. No shell scripts — use directly via Task tool and file operations.
 
 ---
 
@@ -27,24 +27,7 @@
 | Validate every step | Run validator after each change |
 | No silent failures | Errors = immediate escalation to Main |
 | Progress file updated | After EVERY step (mark `[x]` immediately) |
-| **All artifacts are Markdown** | Plans, progress, research → `.md` files only |
-
----
-
-## Output Format Requirements
-
-**Primary artifacts MUST be Markdown (`.md`):**
-
-| Artifact | Extension | Template |
-|----------|-----------|----------|
-| Plan | `.md` | `references/templates/plan-template.md` |
-| Progress | `.md` | `references/templates/progress.md` |
-| Research | `.md` | `references/templates/research-output.md` |
-| Validation report | `.md` | (ad-hoc, but `.md` required) |
-
-**Templates use markdown checkboxes (`- [ ]`, `- [x]`), tables, and headings — subagents must preserve this structure.**
-
-**Additional files** (data dumps, raw API responses, configs, etc.) may use any format (`.json`, `.yaml`, `.txt`, `.csv`) as needed — save alongside primary artifacts in the same directories.
+| Primary artifacts are `.md` | Plans, progress, research → Markdown with checkboxes, tables, headings |
 
 ---
 
@@ -67,6 +50,8 @@
 ```
 
 **Agent creates directories on first use:** `mkdir -p .plans .plans/progress .research`
+
+**Additional files** (data dumps, raw API responses, configs) may use any format — save alongside `.md` artifacts.
 
 ---
 
@@ -239,8 +224,6 @@ CRITICAL PROTOCOL:
 4. On blocker: Update progress Status=BLOCKED, describe blocker, STOP
 5. On complete: Update progress Status=DONE, summary in Completed
 
-**Primary artifacts (plan, progress) must be .md.** Additional data files may use any format.
-
 Progress file: .plans/progress/{progress_file}
 """
 )
@@ -266,8 +249,7 @@ Validation commands:
 - python3 validate.py --json file.json --md file.md --cyclonedx
 - [other checks]
 
-Save results to: .plans/progress/validation-{topic}.md (Markdown report)
-Additional data (JSON logs, raw output) may use any format alongside.
+Save results to: .plans/progress/validation-{topic}.md
 Report: PASS/FAIL with details
 """
 )
@@ -308,18 +290,6 @@ Include:
 
 ---
 
-## Templates (Reference Files)
-
-| Template | Path | Use When |
-|----------|------|----------|
-| Plan | `references/templates/plan-template.md` | Creating a plan file |
-| Progress | `references/templates/progress.md` | Tracking execution status |
-| Research | `references/templates/research-output.md` | Documenting research findings |
-
-Templates are standalone reference files. Read them directly via `Read` tool when creating corresponding files.
-
----
-
 ## Anti-Patterns (Don't)
 
 | Anti-pattern | Why Bad | Fix |
@@ -338,7 +308,7 @@ Templates are standalone reference files. Read them directly via `Read` tool whe
 
 ```
 MAIN AGENT                    SUBAGENT
-─────────────────             ─────────────────
+──────────────────            ─────────────────
 Creates plan                  Reads plan
 Creates progress file         Updates progress after EACH step
 Calls Task tool               Executes steps
@@ -370,4 +340,4 @@ Commits (only Main)           Reports blockers immediately
 
 ---
 
-*Version 2.0: Agent-native rewrite. Shell scripts removed — logic embedded as agent instructions.*
+*Version 2.1.0: Added markdown format requirement for primary artifacts. Agent-native rewrite — no shell scripts.*

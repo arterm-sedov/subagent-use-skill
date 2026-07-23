@@ -1,3 +1,8 @@
+---
+name: subagent-use
+description: Use subagents to delegate bounded work and coordinate results.
+---
+
 # Subagent Use Skill (Agent-Native)
 
 **Name:** subagent-use  
